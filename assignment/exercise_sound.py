@@ -1,83 +1,58 @@
-import network
-import socket
+#!/usr/bin/env python3
+"""
+PWM Tone Generator - Twinkle Twinkle Little Star
+Based on https://www.coderdojotc.org/micropython/sound/04-play-scale/
+"""
 import machine
 import utime
-import uos
-from machine import Pin, PWM
 
-# WiFi credentials
-SSID = 'Your_WiFi_SSID'
-PASSWORD = 'Your_WiFi_Password'
-
-# Speaker setup
+# GP16 is the speaker pin
 SPEAKER_PIN = 16
-speaker = PWM(Pin(SPEAKER_PIN))
+# Create a Pulse Width Modulation Object on this pin
+speaker = machine.PWM(machine.Pin(SPEAKER_PIN))
 
-def connect_wifi():
-    wlan = network.WLAN(network.STA_IF)
-    wlan.active(True)
-    if not wlan.isconnected():
-        print('Connecting to WiFi...')
-        wlan.connect(SSID, PASSWORD)
-        while not wlan.isconnected():
-            pass
-    print('WiFi connected, IP:', wlan.ifconfig()[0])
-    return wlan
+def playtone(frequency: float, duration: float) -> None:
+    speaker.duty_u16(1000)
+    speaker.freq(int(frequency))
+    utime.sleep(duration)
 
-def play_audio(filename):
-    try:
-        with open(filename, 'rb') as file:
-            # Assume the file is raw PCM audio data
-            # You may need to adjust this based on your audio format
-            while True:
-                chunk = file.read(1024)  # Read 1KB at a time
-                if not chunk:
-                    break
-                for byte in chunk:
-                    speaker.duty_u16(int(byte) * 256)  # Scale 8-bit audio to 16-bit
-                    utime.sleep_us(125)  # Adjust this for your desired sample rate
-    except Exception as e:
-        print("Error playing audio:", e)
-    finally:
-        speaker.duty_u16(0)  # Turn off the speaker
+def rest(duration: float) -> None:
+    speaker.duty_u16(0)
+    utime.sleep(duration)
 
-def handle_request(client):
-    request = client.recv(1024)
-    if request.startswith(b'POST /upload'):
-        print("Receiving file...")
-        # Find the start of the file data
-        file_start = request.find(b'\r\n\r\n') + 4
-        file_data = request[file_start:]
-        
-        # Save the file
-        with open('received_audio.raw', 'wb') as file:
-            file.write(file_data)
-        
-        # Send response
-        response = 'HTTP/1.0 200 OK\r\nContent-Type: text/plain\r\n\r\nFile uploaded successfully'
-        client.send(response.encode())
-        
-        # Play the received audio
-        play_audio('received_audio.raw')
-    else:
-        response = 'HTTP/1.0 400 Bad Request\r\nContent-Type: text/plain\r\n\r\nInvalid request'
-        client.send(response.encode())
-    client.close()
+def quiet():
+    speaker.duty_u16(0)
 
-def start_server():
-    addr = socket.getaddrinfo('0.0.0.0', 80)[0][-1]
-    s = socket.socket()
-    s.bind(addr)
-    s.listen(1)
-    print('Listening on', addr)
-    while True:
-        try:
-            client, addr = s.accept()
-            print('Client connected from', addr)
-            handle_request(client)
-        except Exception as e:
-            print("Server error:", e)
+# Define the frequencies for the notes we'll use
+NOTE_C4 = 261.63
+NOTE_D4 = 293.66
+NOTE_E4 = 329.63
+NOTE_F4 = 349.23
+NOTE_G4 = 392.00
+NOTE_A4 = 440.00
 
-# Main execution
-connect_wifi()
-start_server()
+# Define the melody (Twinkle Twinkle Little Star)
+melody = [
+    (NOTE_C4, 0.4), (NOTE_C4, 0.4), (NOTE_G4, 0.4), (NOTE_G4, 0.4),
+    (NOTE_A4, 0.4), (NOTE_A4, 0.4), (NOTE_G4, 0.8),
+    (NOTE_F4, 0.4), (NOTE_F4, 0.4), (NOTE_E4, 0.4), (NOTE_E4, 0.4),
+    (NOTE_D4, 0.4), (NOTE_D4, 0.4), (NOTE_C4, 0.8),
+    (NOTE_G4, 0.4), (NOTE_G4, 0.4), (NOTE_F4, 0.4), (NOTE_F4, 0.4),
+    (NOTE_E4, 0.4), (NOTE_E4, 0.4), (NOTE_D4, 0.8),
+    (NOTE_G4, 0.4), (NOTE_G4, 0.4), (NOTE_F4, 0.4), (NOTE_F4, 0.4),
+    (NOTE_E4, 0.4), (NOTE_E4, 0.4), (NOTE_D4, 0.8),
+    (NOTE_C4, 0.4), (NOTE_C4, 0.4), (NOTE_G4, 0.4), (NOTE_G4, 0.4),
+    (NOTE_A4, 0.4), (NOTE_A4, 0.4), (NOTE_G4, 0.8),
+    (NOTE_F4, 0.4), (NOTE_F4, 0.4), (NOTE_E4, 0.4), (NOTE_E4, 0.4),
+    (NOTE_D4, 0.4), (NOTE_D4, 0.4), (NOTE_C4, 0.8)
+]
+
+print("Playing Twinkle Twinkle Little Star:")
+for note, duration in melody:
+    print(f"Playing {note:.2f} Hz")
+    playtone(note, duration)
+    rest(0.05)  # Short rest between notes
+
+# Turn off the PWM
+quiet()
+print("Done playing.")
