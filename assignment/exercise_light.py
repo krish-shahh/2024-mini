@@ -12,10 +12,10 @@ ADC2 = 28
 led = machine.Pin("LED", machine.Pin.OUT)
 adc = machine.ADC(ADC2)
 
-blink_period = 0.1
+blink_period = 1
 
-max_bright = 20000
-min_bright = 10000
+max_bright = 33000
+min_bright = 14500
 
 
 def clip(value: float) -> float:
