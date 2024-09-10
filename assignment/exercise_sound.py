@@ -57,12 +57,5 @@ def twinkle_twinkle():
     rest(.25)
     playtone(G, .75)
 
-
-# for i in range(64):
-#     print(freq)
-#     playtone(freq, duration)
-#     freq = int(freq * 1.1)
-
-# Turn off the PWM
 twinkle_twinkle()
 quiet()
