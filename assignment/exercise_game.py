@@ -6,6 +6,8 @@ from machine import Pin
 import time
 import random
 import json
+import time
+import os
 
 
 N: int = 3
@@ -41,8 +43,13 @@ def write_json(json_filename: str, data: dict) -> None:
         Dictionary data to write to the file.
     """
 
-    with open(json_filename, "w") as f:
-        json.dump(data, f)
+
+    try:
+        with open(json_filename, "w") as f:
+            json.dump(data, f)
+        print(f"File {json_filename} written successfully")
+    except Exception as e:
+        print(f"Failed to write file {json_filename}: {e}")
 
 
 def scorer(t: list[int | None]) -> None:
@@ -57,13 +64,25 @@ def scorer(t: list[int | None]) -> None:
     # add key, value to this dict to store the minimum, maximum, average response time
     # and score (non-misses / total flashes) i.e. the score a floating point number
     # is in range [0..1]
-    data = {}
+    max_miss = max(t_good)
+    min_miss = min(t_good)
+    avg_miss = sum(t_good) / len(t_good)
+
 
     # %% make dynamic filename and write JSON
 
     now: tuple[int] = time.localtime()
 
     now_str = "-".join(map(str, now[:3])) + "T" + "_".join(map(str, now[3:6]))
+
+    data = {
+        "timestamp": now_str,
+        "max_response_time": max_miss,
+        "min_response_time": min_miss,
+        "avg_response_time": avg_miss
+    }
+    
+
     filename = f"score-{now_str}.json"
 
     print("write", filename)
@@ -98,5 +117,5 @@ if __name__ == "__main__":
         led.low()
 
     blinker(5, led)
-
+    print("T:", t)
     scorer(t)
