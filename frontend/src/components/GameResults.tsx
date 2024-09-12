@@ -2,6 +2,7 @@ import React, { useState, useEffect } from 'react';
 import { db, auth } from '@/lib/firebase';
 import { doc, getDoc } from 'firebase/firestore';
 import { onAuthStateChanged } from 'firebase/auth';
+import { FirebaseError } from 'firebase/app';
 import { Card, CardHeader, CardTitle, CardContent } from "@/components/ui/card";
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
 import { LineChart, Line, XAxis, YAxis, CartesianGrid, Tooltip, Legend, ResponsiveContainer } from 'recharts';
@@ -65,7 +66,13 @@ const GameResults: React.FC = () => {
         }
       } catch (err) {
         console.error("Error fetching game results:", err);
-        setError(`Failed to fetch game results: ${err.message}`);
+        if (err instanceof FirebaseError) {
+          setError(`Firebase error: ${err.message}`);
+        } else if (err instanceof Error) {
+          setError(`Error fetching game results: ${err.message}`);
+        } else {
+          setError('An unknown error occurred');
+        }
       } finally {
         setLoading(false);
       }
