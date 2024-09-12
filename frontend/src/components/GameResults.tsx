@@ -1,6 +1,7 @@
 import React, { useState, useEffect } from 'react';
-import { db } from '@/lib/firebase';
-import { collection, query, where, orderBy, limit, getDocs, DocumentData } from 'firebase/firestore';
+import { db, auth } from '@/lib/firebase';
+import { doc, getDoc } from 'firebase/firestore';
+import { onAuthStateChanged } from 'firebase/auth';
 import { Card, CardHeader, CardTitle, CardContent } from "@/components/ui/card";
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
 import { LineChart, Line, XAxis, YAxis, CartesianGrid, Tooltip, Legend, ResponsiveContainer } from 'recharts';
@@ -13,49 +14,69 @@ interface GameResult {
   score: number;
 }
 
-interface GameResultsProps {
-  userId: string;
-}
-
-const GameResults: React.FC<GameResultsProps> = ({ userId }) => {
+const GameResults: React.FC = () => {
   const [gameResults, setGameResults] = useState<GameResult[]>([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
+  const [userEmail, setUserEmail] = useState<string | null>(null);
+
+  useEffect(() => {
+    const unsubscribe = onAuthStateChanged(auth, (user) => {
+      if (user) {
+        setUserEmail(user.email);
+      } else {
+        setUserEmail(null);
+        setGameResults([]);
+        setError("User not authenticated");
+      }
+    });
+
+    return () => unsubscribe();
+  }, []);
 
   useEffect(() => {
     const fetchGameResults = async () => {
+      if (!userEmail) return;
+
       setLoading(true);
       setError(null);
       try {
-        const q = query(
-          collection(db, 'game_results'),
-          where('userId', '==', userId),
-          orderBy('timestamp', 'desc'),
-          limit(10)
-        );
-        const querySnapshot = await getDocs(q);
-        const results: GameResult[] = [];
-        querySnapshot.forEach((doc) => {
-          const data = doc.data() as DocumentData;
-          results.push({
-            timestamp: data.timestamp.toDate(),
-            min_response_time: data.min_response_time,
-            max_response_time: data.max_response_time,
-            avg_response_time: data.avg_response_time,
-            score: data.score
-          });
-        });
-        setGameResults(results);
+        console.log("Fetching data for email:", userEmail);
+        const docRef = doc(db, 'game_results', userEmail);
+        const docSnap = await getDoc(docRef);
+
+        if (docSnap.exists()) {
+          const data = docSnap.data();
+          console.log("Raw Firestore data:", data);
+
+          const results: GameResult[] = Object.entries(data).map(([key, value]) => ({
+            timestamp: value.timestamp.toDate(),
+            min_response_time: value.min_response_time,
+            max_response_time: value.max_response_time,
+            avg_response_time: value.avg_response_time,
+            score: value.score
+          }));
+
+          console.log("Processed results:", results);
+          setGameResults(results.sort((a, b) => b.timestamp.getTime() - a.timestamp.getTime()).slice(0, 10));
+        } else {
+          console.log("No document found for email:", userEmail);
+          setGameResults([]);
+        }
       } catch (err) {
         console.error("Error fetching game results:", err);
-        setError("Failed to fetch game results. Please try again later.");
+        setError(`Failed to fetch game results: ${err.message}`);
       } finally {
         setLoading(false);
       }
     };
 
     fetchGameResults();
-  }, [userId]);
+  }, [userEmail]);
+
+  if (!userEmail) {
+    return <div>Please sign in to view your game results.</div>;
+  }
 
   if (loading) {
     return <div>Loading game results...</div>;
@@ -73,6 +94,10 @@ const GameResults: React.FC<GameResultsProps> = ({ userId }) => {
     score: 0
   });
 
+  const dataToDisplay = gameResults.length > 0 ? gameResults : placeholderData;
+
+  console.log("Data to display:", dataToDisplay);
+
   return (
     <div className="relative">
       {gameResults.length === 0 && (
@@ -83,7 +108,7 @@ const GameResults: React.FC<GameResultsProps> = ({ userId }) => {
       <div className={gameResults.length === 0 ? 'filter blur-sm' : ''}>
         <Card className="mb-4">
           <CardHeader>
-            <CardTitle>Recent Game Results</CardTitle>
+            <CardTitle>Recent Game Results for {userEmail}</CardTitle>
           </CardHeader>
           <CardContent>
             <Table>
@@ -97,7 +122,7 @@ const GameResults: React.FC<GameResultsProps> = ({ userId }) => {
                 </TableRow>
               </TableHeader>
               <TableBody>
-                {(gameResults.length > 0 ? gameResults : placeholderData).map((result, index) => (
+                {dataToDisplay.map((result, index) => (
                   <TableRow key={index}>
                     <TableCell>{result.timestamp.toLocaleString()}</TableCell>
                     <TableCell>{result.min_response_time}</TableCell>
@@ -117,11 +142,11 @@ const GameResults: React.FC<GameResultsProps> = ({ userId }) => {
           </CardHeader>
           <CardContent>
             <ResponsiveContainer width="100%" height={300}>
-              <LineChart data={gameResults.length > 0 ? [...gameResults].reverse() : placeholderData}>
+              <LineChart data={dataToDisplay}>
                 <CartesianGrid strokeDasharray="3 3" />
                 <XAxis 
                   dataKey="timestamp" 
-                  tickFormatter={(tick) => new Date(tick).toLocaleDateString()} 
+                  tickFormatter={(tick) => new Date(tick).toLocaleString()} 
                 />
                 <YAxis yAxisId="left" />
                 <YAxis yAxisId="right" orientation="right" />
