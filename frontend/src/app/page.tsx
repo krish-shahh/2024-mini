@@ -94,7 +94,7 @@ const Home: React.FC = () => {
             <TabsTrigger value="instructions">Instructions</TabsTrigger>
           </TabsList>
           <TabsContent value="results">
-            <GameResults userId={user.uid} />
+            <GameResults />
           </TabsContent>
           <TabsContent value="overview">
             <Card>
