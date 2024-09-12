@@ -97,6 +97,15 @@ def scorer(t: list[int | None], user_email: str) -> None:
     # Create a dynamic local filename for backup
     now = time.localtime()
     now_str = "-".join(map(str, now[:3])) + "T" + "_".join(map(str, now[3:6]))
+
+    data = {
+        "timestamp": now_str,
+        "max_response_time": max_miss,
+        "min_response_time": min_miss,
+        "avg_response_time": avg_miss
+    }
+    
+
     filename = f"score-{now_str}.json"
     print("Writing results to", filename)
     write_json(filename, data)
