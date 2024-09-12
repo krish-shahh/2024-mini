@@ -50,7 +50,7 @@ const GameResults: React.FC = () => {
           const data = docSnap.data();
           console.log("Raw Firestore data:", data);
 
-          const results: GameResult[] = Object.entries(data).map(([key, value]) => ({
+          const results: GameResult[] = Object.entries(data).map(([, value]) => ({
             timestamp: value.timestamp.toDate(),
             min_response_time: value.min_response_time,
             max_response_time: value.max_response_time,
@@ -102,8 +102,6 @@ const GameResults: React.FC = () => {
   });
 
   const dataToDisplay = gameResults.length > 0 ? gameResults : placeholderData;
-
-  console.log("Data to display:", dataToDisplay);
 
   return (
     <div className="relative">
