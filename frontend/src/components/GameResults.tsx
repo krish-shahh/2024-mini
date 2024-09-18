@@ -51,7 +51,7 @@ const GameResults: React.FC = () => {
           console.log("Raw Firestore data:", data);
 
           const results: GameResult[] = Object.entries(data).map(([, value]) => ({
-            timestamp: value.timestamp.toDate(),
+            timestamp: new Date(value.timestamp),
             min_response_time: value.min_response_time,
             max_response_time: value.max_response_time,
             avg_response_time: value.avg_response_time,
