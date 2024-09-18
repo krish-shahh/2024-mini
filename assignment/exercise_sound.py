@@ -7,7 +7,7 @@ import machine
 import utime
 
 # GP16 is the speaker pin
-SPEAKER_PIN = 16
+SPEAKER_PIN = 28
 C = 262
 D = 294
 E = 330
@@ -39,7 +39,6 @@ def quiet():
 # duration: float = 0.1  # seconds
 
 def twinkle_twinkle():
-    print("Playing frequency (Hz):")
     playtone(C, .75)
     rest(.25)
     playtone(C, .75)

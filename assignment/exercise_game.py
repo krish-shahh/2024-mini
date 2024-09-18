@@ -35,39 +35,56 @@ def write_json(json_filename: str, data: dict) -> None:
     with open(json_filename, "w") as f:
         json.dump(data, f)
 
-def upload_to_firebase(user_email: str, data: dict) -> None:
+
+def upload_to_firebase(user_email: str, data: dict, filename) -> None:
     try:
-        url = f"https://firestore.googleapis.com/v1/projects/{FIREBASE_PROJECT_ID}/databases/(default)/documents/game_results/{user_email}"
-        headers = {
-            'Content-Type': 'application/json',
-            'Authorization': f'key={FIREBASE_API_KEY}'
+        # URL to fetch the existing document
+        get_url = f"https://firestore.googleapis.com/v1/projects/{FIREBASE_PROJECT_ID}/databases/(default)/documents/game_results/{user_email}?key={FIREBASE_API_KEY}"
+
+        # Get the existing document
+        get_response = urequests.get(get_url)
+        existing_games = {}
+        if get_response.status_code == 200:
+            existing_doc = get_response.json()
+            if 'fields' in existing_doc:
+                existing_games = existing_doc['fields']
+        get_response.close()
+
+        # Prepare the new game data
+        new_game_data = {
+            "avg_response_time": {"doubleValue": data['avg_response_time']},
+            "score": {"doubleValue": data['score']},
+            "min_response_time": {"integerValue": str(data['min_response_time'])},
+            "max_response_time": {"integerValue": str(data['max_response_time'])},
+            "timestamp": {"stringValue": data['timestamp']}  # Change to stringValue
         }
-        
-        firestore_data = {
-            "fields": {
-                f"game_{int(time.time())}": {
-                    "mapValue": {
-                        "fields": {
-                            "timestamp": {"timestampValue": data['timestamp']},
-                            "min_response_time": {"integerValue": str(data['min_response_time'])},
-                            "max_response_time": {"integerValue": str(data['max_response_time'])},
-                            "avg_response_time": {"doubleValue": data['avg_response_time']},
-                            "score": {"doubleValue": data['score']}
-                        }
-                    }
-                }
+
+        # Add the new game to the existing games
+        existing_games[filename] = {
+            "mapValue": {
+                "fields": new_game_data
             }
         }
+
+        firestore_data = {
+            "fields": existing_games
+        }
+
+        # URL to update the document
+        patch_url = f"https://firestore.googleapis.com/v1/projects/{FIREBASE_PROJECT_ID}/databases/(default)/documents/game_results/{user_email}?key={FIREBASE_API_KEY}"
         
-        response = urequests.patch(url, json=firestore_data, headers=headers)
-        if response.status_code == 200:
+        # Send a PATCH request to update the document
+        patch_response = urequests.patch(patch_url, json=firestore_data)
+        if patch_response.status_code == 200:
             print("Data successfully uploaded to Firebase Firestore.")
         else:
-            print("Failed to upload data. Status code:", response.status_code)
-            print("Response:", response.text)
-        response.close()
+            print("Failed to upload data. Status code:", patch_response.status_code)
+            print("Response:", patch_response.text)
+        patch_response.close()
     except Exception as e:
         print("Error uploading to Firebase:", e)
+
+
 
 def scorer(t: list[int | None], user_email: str) -> None:
     misses = t.count(None)
@@ -102,7 +119,7 @@ def scorer(t: list[int | None], user_email: str) -> None:
     print("Writing results to", filename)
     write_json(filename, data)
 
-    upload_to_firebase(user_email, data)
+    upload_to_firebase(user_email, data, filename)
 
 if __name__ == "__main__":
     connect_wifi()

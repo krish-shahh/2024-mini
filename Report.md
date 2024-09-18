@@ -9,6 +9,8 @@
 
 This script implements a PWM (Pulse Width Modulation) Tone Generator for MicroPython, specifically designed to play the melody of "Twinkle Twinkle Little Star" on a Raspberry Pi Pico. It defines functions to play tones at specific frequencies and durations, creating musical notes, and combines them to form the familiar tune. The script demonstrates basic sound generation and timing control using MicroPython on embedded hardware.
 
+Video Demo: https://drive.google.com/file/d/18V1Gwkv-u3Lq-bQfA_IjixVmBhGuPvtn/view?usp=drive_link
+
 ## Exercise 3
 
 This exercise implements a reaction time game using MicroPython on a Raspberry Pi Pico WH, with results stored in Firebase and displayed on a Next.js web dashboard.
@@ -55,3 +57,5 @@ Key Components:
 5. View your game results and performance trends.
 
 This project demonstrates the integration of embedded systems (Raspberry Pi Pico WH), cloud services (Firebase), and web technologies (Next.js) to create a full-stack IoT application.
+
+Video Demo: https://drive.google.com/file/d/186_BTU9-rD_RIlFQ6efJON6TDpcoKV1I/view?usp=drive_link
