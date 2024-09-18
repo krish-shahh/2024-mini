@@ -27,6 +27,7 @@ def playtone(frequency: float, duration: float) -> None:
     speaker.freq(int(frequency))
     utime.sleep(duration)
 
+
 def rest(duration: float):
     speaker.duty_u16(0)
     utime.sleep(duration)

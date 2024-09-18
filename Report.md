@@ -7,7 +7,7 @@
 
 ## Exercise 2
 
-This script implements a PWM (Pulse Width Modulation) Tone Generator for MicroPython, specifically designed to play the melody of "Twinkle Twinkle Little Star" on a Raspberry Pi Pico. It defines functions to play tones at specific frequencies and durations, creating musical notes, and combines them to form the familiar tune. The script demonstrates basic sound generation and timing control using MicroPython on embedded hardware.
+This script implements a PWM (Pulse Width Modulation) Tone Generator for MicroPython, specifically designed to play the melody of "Twinkle Twinkle Little Star" on a Raspberry Pi Pico. It defines functions to play specific notes for a specific number of beats, creating musical notes, and combines them to form the familiar tune. The script demonstrates basic sound generation and timing control using MicroPython on embedded hardware.
 
 Video Demo: https://drive.google.com/file/d/18V1Gwkv-u3Lq-bQfA_IjixVmBhGuPvtn/view?usp=drive_link
 

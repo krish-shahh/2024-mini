@@ -11,6 +11,7 @@ from config import WIFI_SSID, WIFI_PASSWORD, FIREBASE_PROJECT_ID, FIREBASE_API_K
 N: int = 10  # Total number of flashes (response measurement rounds)
 on_ms = 500  # LED on duration in milliseconds
 
+
 def connect_wifi():
     wlan = network.WLAN(network.STA_IF)
     wlan.active(True)
